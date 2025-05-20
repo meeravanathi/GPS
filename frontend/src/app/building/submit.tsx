@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 
-const Map = dynamic(() => import('../../components/Map'), {
+const Map = dynamic(() => import('../components/Map'), {
   ssr: false,
   loading: () => <div className="h-64 w-full flex items-center justify-center">Loading map...</div>
 });

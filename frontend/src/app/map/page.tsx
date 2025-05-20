@@ -1,14 +1,9 @@
-// pages/map.tsx
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import dynamic from 'next/dynamic';
-import FloatingButtons from '../components/FloatingButtons';
+'use client';
 
-// Dynamically import Map component to avoid SSR issues with Leaflet
-const Map = dynamic(() => import('../components/Map'), {
-  ssr: false,
-  loading: () => <div className="h-screen w-full flex items-center justify-center">Loading map...</div>
-});
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import FloatingButtons from '../components/FloatingButtons';
+import Map from '../components/Map';
 
 const MapPage: React.FC = () => {
   const router = useRouter();
@@ -37,23 +32,22 @@ const MapPage: React.FC = () => {
 
   const handleAddPin = () => {
     if (position) {
-      router.push({
-        pathname: '/map/add',
-        query: { lat: position[0], lng: position[1] }
-      });
+      router.push(`/map/add?lat=${position[0]}&lng=${position[1]}`);
     }
   };
 
   if (loading) {
-    return <div className="h-screen w-full flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   return (
     <div className="h-screen w-full relative">
       <div className="flex items-center justify-between p-2 bg-white shadow-sm">
-        <div className="flex items-center">
-          <img src="/logo.png" alt="Logo" className="h-8 w-8" />
-        </div>
+        <div className="flex items-center"></div>
         <div className="text-lg font-semibold">Map</div>
         <button className="p-2">
           <svg
@@ -63,7 +57,12 @@ const MapPage: React.FC = () => {
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
         </button>
       </div>
@@ -73,7 +72,14 @@ const MapPage: React.FC = () => {
         <button className="flex-1 py-2 text-gray-500">Satellite</button>
       </div>
 
-      {position && <Map center={position} zoom={16} draggable={true} onPositionChange={setPosition} />}
+      {position && (
+        <Map
+          center={position}
+          zoom={16}
+          draggable={true}
+          onPositionChange={setPosition}
+        />
+      )}
 
       <FloatingButtons onAddClick={handleAddPin} />
 

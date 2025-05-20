@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import BuildingForm from '../../components/BuildingForm';
 
@@ -10,7 +12,10 @@ const Map = dynamic(() => import('../../components/Map'), {
 
 const BuildingNewPage: React.FC = () => {
   const router = useRouter();
-  const { lat, lng } = router.query;
+  const searchParams = useSearchParams();
+  const latParam = searchParams.get('lat');
+  const lngParam = searchParams.get('lng');
+
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [formData, setFormData] = useState({
     gps: '',
@@ -22,36 +27,30 @@ const BuildingNewPage: React.FC = () => {
   const totalPages = 5;
 
   useEffect(() => {
-    if (lat && lng) {
-      const latFloat = parseFloat(lat as string);
-      const lngFloat = parseFloat(lng as string);
+    if (latParam && lngParam) {
+      const latFloat = parseFloat(latParam);
+      const lngFloat = parseFloat(lngParam);
       setPosition([latFloat, lngFloat]);
       setFormData(prev => ({
         ...prev,
         gps: `${latFloat.toFixed(6)}, ${lngFloat.toFixed(6)}`
       }));
     }
-  }, [lat, lng]);
+  }, [latParam, lngParam]);
 
   const handleCancel = () => {
     router.back();
   };
 
   const handleSave = () => {
-    // Save the data or send to API
-    router.push({
-      pathname: '/building/submit',
-      query: { 
-        lat: position?.[0], 
-        lng: position?.[1],
-        doors: formData.numberOfDoors,
-        address: formData.addressInfo,
-        language: formData.language
-      }
-    });
+    if (!position) return;
+    // Construct URL string manually for App Router push
+    router.push(
+      `/building/submit?lat=${position[0]}&lng=${position[1]}&doors=${formData.numberOfDoors}&address=${encodeURIComponent(formData.addressInfo)}&language=${encodeURIComponent(formData.language)}`
+    );
   };
 
-  const handleFormChange = (field: string, value: any) => {
+  const handleFormChange = (field: string, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -63,7 +62,6 @@ const BuildingNewPage: React.FC = () => {
       ...prev,
       gps: newGps
     }));
-    
     const [newLat, newLng] = newGps.split(',').map(coord => parseFloat(coord.trim()));
     if (!isNaN(newLat) && !isNaN(newLng)) {
       setPosition([newLat, newLng]);
@@ -83,12 +81,12 @@ const BuildingNewPage: React.FC = () => {
           </svg>
         </button>
         <div className="flex items-center mx-2">
-          <img src="/logo.png" alt="Logo" className="h-8 w-8" />
+    
         </div>
       </div>
-      
+
       <div className="p-4">
-        <BuildingForm 
+        <BuildingForm
           formData={formData}
           onFormChange={handleFormChange}
           onGpsChange={handleGpsChange}
@@ -97,7 +95,7 @@ const BuildingNewPage: React.FC = () => {
           onCancel={handleCancel}
         />
       </div>
-      
+
       <div className="fixed bottom-2 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-1 rounded-full">
         {currentPage} / {totalPages}
       </div>
