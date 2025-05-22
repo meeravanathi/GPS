@@ -12,6 +12,7 @@ interface MapProps {
   instructionText?: string;
   height?: string;
   onPositionChange?: (position: [number, number]) => void;
+  onMapDoubleClick?: (position: [number, number]) => void; 
 }
 
 const Map: React.FC<MapProps> = ({
@@ -23,7 +24,8 @@ const Map: React.FC<MapProps> = ({
   markerPosition,
   instructionText,
   height = '100%',
-  onPositionChange
+  onPositionChange,
+  onMapDoubleClick
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -32,14 +34,22 @@ const Map: React.FC<MapProps> = ({
   useEffect(() => {
     if (!mapRef.current) return;
 
-    let L: typeof import('leaflet');
+    import('leaflet').then((L) => {
+      // If map already initialized, just update view and marker position
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.setView(center, zoom);
 
-    // Dynamically import leaflet only on client
-    import('leaflet').then((leaflet) => {
-      L = leaflet;
+        if (markerRef.current) {
+          const pos = markerPosition || center;
+          markerRef.current.setLatLng(pos);
+          // Update draggable property dynamically
+          markerRef.current.dragging[showDraggablePin ? 'enable' : 'disable']();
+        }
+        return;
+      }
 
-      // Initialize map
-      const map = L.map(mapRef.current!).setView(center, zoom);
+      // Initialize map once
+      const map = L.map(mapRef.current).setView(center, zoom);
       mapInstanceRef.current = map;
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -47,14 +57,11 @@ const Map: React.FC<MapProps> = ({
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
 
-      // Determine actual marker position
       const actualMarkerPos = showMarker
         ? markerPosition || center
         : center;
 
-      // Create marker if needed
       if (showMarker || showDraggablePin) {
-        // Custom pin icon for draggable pin
         const markerIcon = showDraggablePin
           ? L.divIcon({
               html: `<div style="background-color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 2px solid #e54e4e;">
@@ -67,11 +74,11 @@ const Map: React.FC<MapProps> = ({
               iconAnchor: [15, 30],
             })
           : L.icon({
-              iconUrl: '/frontend/src/app/marker-icon.png',
+              iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
               iconSize: [25, 41],
               iconAnchor: [12, 41],
               popupAnchor: [1, -34],
-              shadowUrl: 'D:/college/PROJECTS/GPS/frontend/src/app/marker-shadow.png',
+              shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
               shadowSize: [41, 41],
             });
 
@@ -94,14 +101,34 @@ const Map: React.FC<MapProps> = ({
         }
       }
 
-      // If draggable but no draggable pin, listen for map clicks
-      if (draggable && onPositionChange && !showDraggablePin) {
-        map.on('click', (e) => {
+      if (draggable && (onPositionChange || onMapDoubleClick)) {
+        map.doubleClickZoom.disable();
+
+        map.on('dblclick', (e) => {
           const { lat, lng } = e.latlng;
-          onPositionChange([lat, lng]);
+
+          if (onMapDoubleClick) {
+            onMapDoubleClick([lat, lng]);
+          }
+
+          if (onPositionChange) {
+            onPositionChange([lat, lng]);
+          }
 
           if (markerRef.current) {
             markerRef.current.setLatLng([lat, lng]);
+          } else {
+            const defaultIcon = L.icon({
+              iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34],
+              shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+              shadowSize: [41, 41],
+            });
+
+            const newMarker = L.marker([lat, lng], { icon: defaultIcon }).addTo(map);
+            markerRef.current = newMarker;
           }
         });
       }
@@ -111,18 +138,26 @@ const Map: React.FC<MapProps> = ({
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        markerRef.current = null;
       }
     };
-  }, []); // Empty dependency array: run once on mount
+  }, []); // Run only once to initialize the map
 
-  // Update marker position if it changes
+  // Update marker position and draggable status when relevant props change
   useEffect(() => {
-    if (markerRef.current && markerPosition) {
-      markerRef.current.setLatLng(markerPosition);
-    }
-  }, [markerPosition]);
+    if (markerRef.current) {
+      const pos = markerPosition || center;
+      markerRef.current.setLatLng(pos);
 
-  // Update map center and zoom if they change
+      if (showDraggablePin) {
+        markerRef.current.dragging.enable();
+      } else {
+        markerRef.current.dragging.disable();
+      }
+    }
+  }, [markerPosition, center, showDraggablePin]);
+
+  // Update map view when center or zoom changes
   useEffect(() => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.setView(center, zoom);

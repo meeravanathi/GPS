@@ -105,7 +105,7 @@ const MapConfirmPage: React.FC = () => {
         <div style={{ position: 'relative', zIndex: 1, height: 'calc(100% - 112px)' }}>
           <Map
             center={position}
-            zoom={16}
+            zoom={25}
             draggable={false}
             showMarker={true}
             markerPosition={position}

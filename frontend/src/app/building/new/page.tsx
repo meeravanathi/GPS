@@ -23,8 +23,6 @@ const BuildingNewPage: React.FC = () => {
     numberOfDoors: 0,
     addressInfo: ''
   });
-  const [currentPage, setCurrentPage] = useState<number>(4);
-  const totalPages = 5;
 
   useEffect(() => {
     if (latParam && lngParam) {
@@ -74,7 +72,7 @@ const BuildingNewPage: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full bg-white">
-      <div className="flex items-center p-2 bg-white shadow-sm">
+      <div className="flex items-center p-2 bg-purple-300 shadow-sm">
         <button onClick={handleCancel} className="p-2">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -96,9 +94,7 @@ const BuildingNewPage: React.FC = () => {
         />
       </div>
 
-      <div className="fixed bottom-2 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-1 rounded-full">
-        {currentPage} / {totalPages}
-      </div>
+    
     </div>
   );
 };
