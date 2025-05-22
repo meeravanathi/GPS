@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 const Map = dynamic(() => import('../../components/Map'), {
@@ -17,9 +16,7 @@ const MapAddPage: React.FC = () => {
   const searchParams = useSearchParams();
 
   const [position, setPosition] = useState<[number, number] | null>(null);
-  const [currentPage] = useState<number>(2);
-  const totalPages = 5;
-
+ 
   useEffect(() => {
     const latParam = searchParams.get('lat');
     const lngParam = searchParams.get('lng');
@@ -84,7 +81,6 @@ const MapAddPage: React.FC = () => {
 
   return (
     <>
-      {/* Global CSS to force Leaflet container behind buttons */}
       <style jsx global>{`
         .leaflet-container {
           z-index: 0 !important;
@@ -93,8 +89,8 @@ const MapAddPage: React.FC = () => {
 
       <div className="h-screen w-full relative">
         <div className="flex items-center justify-between p-2 bg-white shadow-sm z-50 relative">
-          <div className="flex items-center">{/* Header elements */}</div>
-          <div className="text-lg font-semibold">Map</div>
+          <div className="flex items-center"></div>
+        
           <button className="p-2">
             <svg
               className="w-6 h-6"
@@ -118,19 +114,17 @@ const MapAddPage: React.FC = () => {
           <button className="flex-1 py-2 text-gray-500">Satellite</button>
         </div>
 
-        {/* Wrap map in relative div with low z-index */}
         <div style={{ position: 'relative', zIndex: 1, height: 'calc(100% - 112px)' }}>
           <Map
             center={position}
-            zoom={12}
+            zoom={25}
             draggable={true}
-            onPositionChange={handlePinMove}
             showDraggablePin={true}
-            
+            onPositionChange={handlePinMove}
+            onMapDoubleClick={handleMapDoubleClick}
           />
         </div>
 
-        {/* Buttons container with very high z-index */}
         <div
           className="absolute bottom-16 right-6 flex flex-col space-y-4"
           style={{ zIndex: 9999 }}
@@ -164,13 +158,7 @@ const MapAddPage: React.FC = () => {
             </svg>
           </button>
         </div>
-
-        <div
-          className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-1 rounded-full z-50"
-          style={{ zIndex: 9999 }}
-        >
-          {currentPage} / {totalPages}
-        </div>
+       
       </div>
     </>
   );
