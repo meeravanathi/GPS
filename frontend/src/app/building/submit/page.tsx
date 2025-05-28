@@ -15,7 +15,7 @@ const BuildingSubmitPage: React.FC = () => {
     numberOfDoors: 0,
     addressInfo: ''
   });
- 
+
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   useEffect(() => {
@@ -43,7 +43,7 @@ const BuildingSubmitPage: React.FC = () => {
   }, []);
 
   const handleReturnToHome = () => {
-    window.location.href = '/'; // Redirect using window.location instead of router
+    window.location.href = '/';
   };
 
   const handleGpsChange = (newGps: string) => {
@@ -58,12 +58,38 @@ const BuildingSubmitPage: React.FC = () => {
     }
   };
 
-  const handleSave = () => {
-    // save to backend here
-    setShowSuccessMessage(true);
-    setTimeout(() => {
-      window.location.href = '/'; // Redirect after save
-    }, 2000);
+  const handleSave = async () => {
+    try {
+      const [lat, lng] = formData.gps.split(',').map(coord => parseFloat(coord.trim()));
+
+      const response = await fetch('http://localhost:3001/api/door', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lat,
+          long: lng,
+          info: formData.addressInfo,
+          language: formData.language,
+          numberOfDoors: formData.numberOfDoors,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert('Error: ' + errorData.error);
+        return;
+      }
+
+      setShowSuccessMessage(true);
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    } catch (error) {
+      console.error('Save error:', error);
+      alert('An error occurred while saving');
+    }
   };
 
   if (!position) {
@@ -74,19 +100,10 @@ const BuildingSubmitPage: React.FC = () => {
     <div className="min-h-screen w-full bg-white">
       <div className="flex items-center p-2 bg-white shadow-sm">
         <button onClick={handleReturnToHome} className="p-2">
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </button>
-        <div className="flex items-center mx-2">
-        
-        </div>
         <div className="text-purple-500 font-semibold ml-2">EDIT GPS during 24 hours possible</div>
       </div>
 
@@ -101,13 +118,7 @@ const BuildingSubmitPage: React.FC = () => {
               className="w-full p-2 border rounded-md"
             />
             <div className="ml-2">
-              <svg
-                className="w-6 h-6 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -151,16 +162,10 @@ const BuildingSubmitPage: React.FC = () => {
               <option value="English">English</option>
               <option value="Tamil">Tamil</option>
               <option value="Hindi">Hindi</option>
-              <option value="Telugu">Hindi</option>
+              <option value="Telugu">Telugu</option>
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <svg
-                className="w-4 h-4 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </div>
@@ -177,7 +182,10 @@ const BuildingSubmitPage: React.FC = () => {
             >
               −
             </button>
-            <button onClick={() => setFormData(prev => ({ ...prev, numberOfDoors: prev.numberOfDoors + 1 }))} className="p-1 border rounded-md">
+            <button
+              onClick={() => setFormData(prev => ({ ...prev, numberOfDoors: prev.numberOfDoors + 1 }))}
+              className="p-1 border rounded-md"
+            >
               +
             </button>
           </div>
@@ -210,7 +218,6 @@ const BuildingSubmitPage: React.FC = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };
