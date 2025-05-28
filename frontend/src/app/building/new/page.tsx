@@ -20,8 +20,8 @@ const BuildingNewPage: React.FC = () => {
   const [formData, setFormData] = useState({
     gps: '',
     language: 'English',
-    numberOfDoors: 0,
-    addressInfo: ''
+    numberOfDoors: 1,
+    addressInfo: ['']
   });
 
   useEffect(() => {
@@ -42,17 +42,39 @@ const BuildingNewPage: React.FC = () => {
 
   const handleSave = () => {
     if (!position) return;
-    // Construct URL string manually for App Router push
+    const addressParams = formData.addressInfo
+      .map((addr, i) => `address${i + 1}=${encodeURIComponent(addr)}`)
+      .join('&');
+
     router.push(
-      `/building/submit?lat=${position[0]}&lng=${position[1]}&doors=${formData.numberOfDoors}&address=${encodeURIComponent(formData.addressInfo)}&language=${encodeURIComponent(formData.language)}`
+      `/building/submit?lat=${position[0]}&lng=${position[1]}&doors=${formData.numberOfDoors}&${addressParams}&language=${encodeURIComponent(formData.language)}`
     );
   };
 
-  const handleFormChange = (field: string, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleFormChange = (field: string, value: string | number, index?: number) => {
+    if (field === 'addressInfo' && typeof index === 'number') {
+      const newAddresses = [...formData.addressInfo];
+      newAddresses[index] = value as string;
+      setFormData(prev => ({
+        ...prev,
+        addressInfo: newAddresses
+      }));
+    } else if (field === 'numberOfDoors') {
+      const newDoorCount = Number(value);
+      const updatedAddresses = [...formData.addressInfo];
+      while (updatedAddresses.length < newDoorCount) updatedAddresses.push('');
+      while (updatedAddresses.length > newDoorCount) updatedAddresses.pop();
+      setFormData(prev => ({
+        ...prev,
+        numberOfDoors: newDoorCount,
+        addressInfo: updatedAddresses
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   const handleGpsChange = (newGps: string) => {
@@ -74,13 +96,10 @@ const BuildingNewPage: React.FC = () => {
     <div className="min-h-screen w-full bg-white">
       <div className="flex items-center p-2 bg-purple-300 shadow-sm">
         <button onClick={handleCancel} className="p-2">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </button>
-        <div className="flex items-center mx-2">
-    
-        </div>
       </div>
 
       <div className="p-4">
@@ -93,8 +112,6 @@ const BuildingNewPage: React.FC = () => {
           onCancel={handleCancel}
         />
       </div>
-
-    
     </div>
   );
 };

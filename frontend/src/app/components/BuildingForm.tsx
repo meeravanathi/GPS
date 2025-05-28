@@ -3,7 +3,6 @@
 import dynamic from 'next/dynamic';
 import React from 'react';
 
-// Dynamically import the Map component with SSR disabled
 const Map = dynamic(() => import('./Map'), { ssr: false });
 
 interface BuildingFormProps {
@@ -11,10 +10,10 @@ interface BuildingFormProps {
     gps: string;
     language: string;
     numberOfDoors: number;
-    addressInfo: string;
+    addressInfo: string[];
   };
   position: [number, number];
-  onFormChange: (field: string, value: any) => void;
+  onFormChange: (field: string, value: any, index?: number) => void;
   onGpsChange: (gps: string) => void;
   onSave: () => void;
   onCancel: () => void;
@@ -67,16 +66,15 @@ const BuildingForm: React.FC<BuildingFormProps> = ({
 
       {/* Map */}
       <div className="h-64 border rounded-md overflow-hidden shadow-sm">
-  <Map
-  center={position}          // fixed center position
-  zoom={13}                  // your preferred zoom level
-  showMarker={true}          // show marker at fixed position
-  markerPosition={position}  // fixed marker position (same as center)
-  draggable={false}          // disable dragging
-  showDraggablePin={false}   // no draggable marker
-/>
-
-</div>
+        <Map
+          center={position}
+          zoom={13}
+          showMarker={true}
+          markerPosition={position}
+          draggable={false}
+          showDraggablePin={false}
+        />
+      </div>
 
       {/* Language Dropdown */}
       <div>
@@ -130,16 +128,19 @@ const BuildingForm: React.FC<BuildingFormProps> = ({
         </div>
       </div>
 
-      {/* Address Info */}
+      {/* Address Info for Each Door */}
       <div>
         <label className="block text-sm font-medium mb-1">Address Info & Comments*</label>
-        <input
-          type="text"
-          value={formData.addressInfo}
-          onChange={(e) => onFormChange('addressInfo', e.target.value)}
-          className="w-full p-2 border rounded-md"
-          placeholder="e.g. Left to No.4 1st floor"
-        />
+        {formData.addressInfo.map((address, index) => (
+          <input
+            key={index}
+            type="text"
+            value={address}
+            onChange={(e) => onFormChange('addressInfo', e.target.value, index)}
+            className="w-full p-2 mb-2 border rounded-md"
+            placeholder={`e.g. Address for door ${index + 1}`}
+          />
+        ))}
       </div>
 
       {/* Action Buttons */}
