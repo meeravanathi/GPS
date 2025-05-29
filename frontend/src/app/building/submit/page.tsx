@@ -17,7 +17,7 @@ const BuildingSubmitPage: React.FC = () => {
   });
 
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -43,7 +43,7 @@ const BuildingSubmitPage: React.FC = () => {
   }, []);
 
   const handleReturnToHome = () => {
-    window.location.href = '/';
+    window.location.href = `/building`;
   };
 
   const handleGpsChange = (newGps: string) => {

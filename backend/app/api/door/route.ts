@@ -9,10 +9,60 @@ export async function OPTIONS() {
     status: 204,
     headers: {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     },
   });
+}
+
+// GET handler to fetch latest building
+export async function GET() {
+  try {
+    const latestBuilding = await prisma.building.findFirst({
+      orderBy: {
+        idBuilding: 'desc'
+      },
+      include: {
+        Door: true
+      }
+    });
+
+    if (!latestBuilding) {
+      return new NextResponse(JSON.stringify({ message: 'No buildings found' }), {
+        status: 404,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
+    return new NextResponse(JSON.stringify({
+      building: {
+        id: latestBuilding.idBuilding,
+        lat: latestBuilding.lat,
+        long: latestBuilding.long,
+        information: latestBuilding.information,
+        doorCount: latestBuilding.Door.length,
+        language: latestBuilding.Door[0]?.language || 'Unknown'
+      }
+    }), {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json"
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching latest building:', error);
+    return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), {
+      status: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json"
+      }
+    });
+  }
 }
 
 // POST handler to create building and doors
