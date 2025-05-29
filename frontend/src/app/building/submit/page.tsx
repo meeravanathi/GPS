@@ -62,7 +62,7 @@ const BuildingSubmitPage: React.FC = () => {
     try {
       const [lat, lng] = formData.gps.split(',').map(coord => parseFloat(coord.trim()));
 
-      const response = await fetch('http://localhost:3001/api/door', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/door`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
