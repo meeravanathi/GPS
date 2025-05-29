@@ -91,16 +91,16 @@ export default function HomePage() {
   )}
 
   {/* Floating Buttons */}
-  <div className="absolute bottom-24 right-4 z-10 flex flex-col items-center space-y-4">
+  <div className="absolute bottom-24 right-4 z-30 flex flex-col items-center space-y-4">
     {userLocation && (
       <Link href={`/building/new?lat=${userLocation[0]}&lng=${userLocation[1]}`}>
-        <button className="w-14 h-14 rounded-full bg-purple-600 text-white shadow-lg flex items-center justify-center hover:bg-purple-800 transition">
+        <button className="w-14 h-14 rounded-full bg-purple-600 text-white shadow-lg flex items-center justify-center hover:bg-purple-800 transition ">
           <Plus size={28} />
         </button>
       </Link>
     )}
     <Link href="/map/add">
-      <button className="w-14 h-14 rounded-full bg-purple-600 text-white shadow-lg flex items-center justify-center hover:bg-purple-800 transition">
+      <button className="w-14 h-14 rounded-full bg-purple-600 text-white shadow-lg flex items-center justify-center hover:bg-purple-500 transition">
         <MapPin size={24} />
       </button>
     </Link>

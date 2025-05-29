@@ -34,7 +34,7 @@ const Map: React.FC<MapProps> = ({
   const mapInstanceRef = useRef<any>(null);
   const tileLayerRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
-
+  const pinMarkersRef = useRef<any[]>([]); // for pins
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -115,7 +115,7 @@ const Map: React.FC<MapProps> = ({
           .addTo(map)
           .bindPopup(pin.title);
 
-       
+        pinMarkersRef.current.push(pinMarker);
       });
 
       // Double-click to move marker
@@ -141,7 +141,7 @@ const Map: React.FC<MapProps> = ({
         mapInstanceRef.current = null;
         markerRef.current = null;
         tileLayerRef.current = null;
-      
+        pinMarkersRef.current = [];
       }
     };
   }, []);
