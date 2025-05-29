@@ -88,6 +88,8 @@ const BuildingForm: React.FC<BuildingFormProps> = ({
             <option value="English">English</option>
             <option value="Tamil">Tamil</option>
             <option value="Hindi">Hindi</option>
+            <option value="Hindi">Telugu</option>
+            <option value="Hindi">Malayalam</option>
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
             <svg

@@ -12,11 +12,13 @@ interface MapProps {
   instructionText?: string;
   height?: string;
   onPositionChange?: (position: [number, number]) => void;
-  onMapDoubleClick?: (position: [number, number]) => void; 
+  onMapDoubleClick?: (position: [number, number]) => void;
+  mapView?: 'map' | 'satellite'; // new
 }
 
 const Map: React.FC<MapProps> = ({
   center,
+  pins = [],
   zoom,
   draggable = false,
   showMarker = false,
@@ -25,41 +27,41 @@ const Map: React.FC<MapProps> = ({
   instructionText,
   height = '100%',
   onPositionChange,
-  onMapDoubleClick
+  onMapDoubleClick,
+  mapView = 'map',
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
+  const tileLayerRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+
 
   useEffect(() => {
     if (!mapRef.current) return;
 
     import('leaflet').then((L) => {
-      // If map already initialized, just update view and marker position
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.setView(center, zoom);
+      if (mapInstanceRef.current) return;
 
-        if (markerRef.current) {
-          const pos = markerPosition || center;
-          markerRef.current.setLatLng(pos);
-          // Update draggable property dynamically
-          markerRef.current.dragging[showDraggablePin ? 'enable' : 'disable']();
-        }
-        return;
-      }
-
-      // Initialize map once
-      const map = L.map(mapRef.current).setView(center, zoom);
+      const map = L.map(mapRef.current!).setView(center, zoom);
       mapInstanceRef.current = map;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
+      // Choose base layer
+      const getTileLayer = () =>
+        mapView=== 'satellite'
+          ? L.tileLayer(
+              'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+              { attribution: 'Tiles © Esri' }
+            )
+          : L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution:
+                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            });
 
-      const actualMarkerPos = showMarker
-        ? markerPosition || center
-        : center;
+      tileLayerRef.current = getTileLayer();
+      tileLayerRef.current.addTo(map);
+
+      // Draggable marker or static marker
+      const actualMarkerPos = showMarker ? markerPosition || center : center;
 
       if (showMarker || showDraggablePin) {
         const markerIcon = showDraggablePin
@@ -90,10 +92,6 @@ const Map: React.FC<MapProps> = ({
         markerRef.current = marker;
 
         if (showDraggablePin && onPositionChange) {
-          marker.on('drag', () => {
-            const pos = marker.getLatLng();
-            onPositionChange([pos.lat, pos.lng]);
-          });
           marker.on('dragend', () => {
             const pos = marker.getLatLng();
             onPositionChange([pos.lat, pos.lng]);
@@ -101,34 +99,36 @@ const Map: React.FC<MapProps> = ({
         }
       }
 
+      // Add pins
+      pins.forEach((pin) => {
+        const pinMarker = L.marker(pin.position, {
+          title: pin.title,
+          icon: L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+            shadowSize: [41, 41],
+          }),
+        })
+          .addTo(map)
+          .bindPopup(pin.title);
+
+       
+      });
+
+      // Double-click to move marker
       if (draggable && (onPositionChange || onMapDoubleClick)) {
         map.doubleClickZoom.disable();
 
         map.on('dblclick', (e) => {
           const { lat, lng } = e.latlng;
-
-          if (onMapDoubleClick) {
-            onMapDoubleClick([lat, lng]);
-          }
-
-          if (onPositionChange) {
-            onPositionChange([lat, lng]);
-          }
+          onMapDoubleClick?.([lat, lng]);
+          onPositionChange?.([lat, lng]);
 
           if (markerRef.current) {
             markerRef.current.setLatLng([lat, lng]);
-          } else {
-            const defaultIcon = L.icon({
-              iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34],
-              shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-              shadowSize: [41, 41],
-            });
-
-            const newMarker = L.marker([lat, lng], { icon: defaultIcon }).addTo(map);
-            markerRef.current = newMarker;
           }
         });
       }
@@ -136,38 +136,48 @@ const Map: React.FC<MapProps> = ({
 
     return () => {
       if (mapInstanceRef.current) {
+        mapInstanceRef.current.off();
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
         markerRef.current = null;
+        tileLayerRef.current = null;
+      
       }
     };
-  }, []); // Run only once to initialize the map
+  }, []);
 
-  // Update marker position and draggable status when relevant props change
-  useEffect(() => {
-    if (markerRef.current) {
-      const pos = markerPosition || center;
-      markerRef.current.setLatLng(pos);
-
-      if (showDraggablePin) {
-        markerRef.current.dragging.enable();
-      } else {
-        markerRef.current.dragging.disable();
-      }
-    }
-  }, [markerPosition, center, showDraggablePin]);
-
-  // Update map view when center or zoom changes
+  // Update view on center or zoom change
   useEffect(() => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.setView(center, zoom);
     }
   }, [center, zoom]);
 
+  // Update tile layer on mapType change
+  useEffect(() => {
+    if (mapInstanceRef.current && tileLayerRef.current) {
+      mapInstanceRef.current.removeLayer(tileLayerRef.current);
+
+      import('leaflet').then((L) => {
+        tileLayerRef.current =
+          mapView === 'satellite'
+            ? L.tileLayer(
+                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                { attribution: 'Tiles © Esri' }
+              )
+            : L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution:
+                  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+              });
+
+        tileLayerRef.current.addTo(mapInstanceRef.current);
+      });
+    }
+  }, [mapView]);
+
   return (
     <div className="relative w-full" style={{ height }}>
       <div ref={mapRef} className="w-full h-full"></div>
-
       {instructionText && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
           <div className="bg-white bg-opacity-70 px-2 py-1 rounded text-red-600 font-bold">
