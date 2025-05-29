@@ -23,7 +23,6 @@ model Congregation {
   idCongregation Int         @id @default(autoincrement()) @db.UnsignedMediumInt
   name           String?     @db.VarChar(255)
   language       String?     @db.VarChar(100)
-  last_modified  DateTime?   @default(now()) @db.Timestamp(0)
   Door           Door[]
   Language       Language[]
   Publisher      Publisher[]
@@ -48,7 +47,7 @@ model Door {
 
 model Language {
   idLanguage   Int          @id @default(autoincrement()) @db.UnsignedInt
-  id_cong_app  Int          @db.UnsignedMediumInt
+  id_cong_app  Int          @db.UnsignedMediumInt @unique
   id_cong_lang Int          @db.UnsignedMediumInt
   name         String       @db.VarChar(100)
   Door         Door[]
