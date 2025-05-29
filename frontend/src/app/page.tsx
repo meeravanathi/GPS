@@ -45,7 +45,7 @@ export default function HomePage() {
   const fetchLatestBuilding = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/door', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/door`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
