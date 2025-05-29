@@ -13,7 +13,7 @@ const Map = dynamic(() => import('../../components/Map'), {
 const MapConfirmPage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-const [mapType, setMapType] = useState<'map' | 'satellite'>('map');
+  const [mapType, setMapType] = useState<'map' | 'satellite'>('map');
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [showCoordinates, setShowCoordinates] = useState<boolean>(true);
   const [currentPage] = useState<number>(3);
